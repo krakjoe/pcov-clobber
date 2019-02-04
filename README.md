@@ -10,13 +10,15 @@ Therefore this package relies on uopz 6.0+, the loading of uopz has a small detr
 Usage
 =====
 
-You must require pcov/clobber in your composer.json, and add the following to your scripts section:
+Suggested installation steps:
 
 ```
-    "scripts": {
-        "post-autoload-dump": "\\pcov\\Clobber::autoload"
-    }
+composer require --dev pcov/clobber
+composer config scripts.post-autoload-dump "\\pcov\\Clobber::autoload"
+composer dump-autoload
 ```
 
-
-
+NOTE: Installing composer dependencies with `--no-dev` flag (ie: production) will render a warning which can be safely ignored:
+```
+Class \pcov\Clobber is not autoloadable, can not call post-autoload-dump script
+```
