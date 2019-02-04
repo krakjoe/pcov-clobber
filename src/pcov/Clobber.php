@@ -9,17 +9,28 @@ namespace pcov
 			$composer = $ev->getComposer();
 			$vendor   = $composer->getConfig()
 					->get("vendor-dir");
+
 			$autoload = sprintf(
 				"%s/autoload.php", $vendor);
-			$contents = file_get_contents($autoload);
+
+			require_once($autoload);
+
+			if (version_compare(\PHPUnit\Runner\Version::id(), "7", ">=")) {
+				$driver = \pcov\Driver7::class;
+			} else {
+				$driver = \pcov\Driver6::class;
+			}
 
 			$contents = preg_replace(
 				"~return([^;]+)~",
-				"uopz_set_mock(\\SebastianBergmann\\CodeCoverage\\Driver\\Xdebug::class, ".
-					"\\pcov\Driver::class);\n\n".
-				"\$autoloader = \\1;\n\n".
-				"uopz_set_return(\\SebastianBergmann\\Environment\\Runtime::class, 'hasXdebug', true);\n\n".
-				"return \$autoloader;", $contents);
+				"return (function(){\n".
+					"\tuopz_set_mock(\\SebastianBergmann\\CodeCoverage\\Driver\\Xdebug::class, ".
+					"\t$driver::class);\n\n".
+				"\t\$autoloader =\\1;\n\n".
+				"\t\uopz_set_return(\n".
+					"\t\t\\SebastianBergmann\\Environment\\Runtime::class, 'hasXdebug', true);\n\n".
+				"return \$autoloader;\n".
+				"})();", file_get_contents($autoload));
 
 			file_put_contents($autoload, $contents);
 		}
