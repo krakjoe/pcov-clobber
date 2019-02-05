@@ -1,0 +1,116 @@
+#!/usr/bin/env php
+<?php
+require_once "vendor/autoload.php";
+
+function usage($message = null, ... $args) {
+	if ($message) {
+		vfprintf(STDERR, $message, $args);	
+	}
+
+	throw new Error("usage: pcov [path [operation=clobber|unclobber]]");
+}
+
+$config = [
+	"exec"    => array_shift($argv),
+	"path"    => null,
+	"operation" => "clobber"
+];
+
+switch (count($argv)) {
+	case 2:
+		$config["path"] = array_shift($argv);
+		$config["operation"] = array_shift($argv);
+	break;
+
+	case 1:
+		$arg = array_shift($argv);
+
+		if ($arg == "clobber" || $arg == "unclobber") {
+			$config["operation"] = $arg;
+		} else if (is_dir($arg)) {
+			$config["path"] = realpath($arg);		
+		} else {
+			usage("incorrect argument at %s", $arg);
+		}
+	break;
+
+	case 0:
+		break;
+
+	default:
+		usage();
+}
+
+if ($config["operation"] != "clobber" && 
+    $config["operation"] != "unclobber") {
+	usage();
+}
+
+if ($config["path"]) {
+	if (!file_exists("{$config["path"]}/vendor/autoload.php")) {
+		usage("cannot find composer autoloader in %s", $config["path"]);
+	}
+
+	require_once "{$config["path"]}/vendor/autoload.php";
+} else {
+	$found = false;
+	foreach ([
+		__DIR__ . '/../../../autoload.php', 
+		__DIR__ . '/../vendor/autoload.php'
+	] as $file) {
+	    if (file_exists($file)) {
+		$found = true;
+		$config["path"] = dirname($file);
+		require $file;
+		break;
+	    }
+	}
+
+	if (!$found) {
+		usage("cannot detect composer autoloader in default paths");
+	}
+}
+
+if (!\class_exists(\PHPUnit\Runner\Version::class)) {
+	usage("PHPUnit does not seem to be available");
+} else if (\version_compare(\PHPUnit\Runner\Version::id(), "8", ">=")) {
+	usage("PHPUnit 8 does not require a patch for PCOV");
+} else if (\version_compare(\PHPUnit\Runner\Version::id(), "7", ">=")) {
+	$config["version"] = 7;
+} else if (\version_compare(\PHPUnit\Runner\Version::id(), "6", ">=")) {
+	$config["version"] = 6;
+} else {
+	usage("Clobber supports PHPUnit version 6 or 7");
+}
+
+if (!class_exists(\SebastianBergmann\Environment\Runtime::class) || 
+    !class_exists(\SebastianBergmann\CodeCoverage\CodeCoverage::class)) {
+	usage(
+		"\\SebastianBergmann\\Environment\\Runtime and ".
+		"\\SebastianBergmann\\CodeCoverage\\CodeCoverage cannot be found");
+}
+
+try {
+	$runtime = new \pcov\Clobber\Runtime(
+		(new ReflectionClass(\SebastianBergmann\Environment\Runtime::class))->getFilename());
+	$runtime->{$config["operation"]}($config["version"]);
+	$runtime = true;
+	$coverage = new \pcov\Clobber\CodeCoverage(
+		(new ReflectionClass(\SebastianBergmann\CodeCoverage\CodeCoverage::class))->getFilename());
+	$coverage->{$config["operation"]}($config["version"]);
+	$coverage = true;
+} catch (Error $ex) {
+	if ($runtime === true) {
+		$runtime = new \pcov\Clobber\Runtime(
+			(new ReflectionClass(\SebastianBergmann\Environment\Runtime::class))->getFilename());
+		$runtime->unclobber($config["version"]);
+	}
+
+	if ($coverage === true) {
+		$coverage = new \pcov\Clobber\CodeCoverage(
+			(new ReflectionClass(\SebastianBergmann\CodeCoverage\CodeCoverage::class))->getFilename());
+		$coverage->unclobber($config["version"]);
+	}
+
+	throw new Error("Clobbering failed, changes reverted", 0, $ex);
+}
