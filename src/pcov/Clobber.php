@@ -15,12 +15,17 @@ namespace pcov
 
 			require_once($autoload);
 
+			if (!class_exists(\PHPUnit\Runner\Version::id())) {
+				return;
+			}
+
 			if (version_compare(\PHPUnit\Runner\Version::id(), "7", ">=")) {
 				$driver = \pcov\Driver7::class;
 			} else {
 				$driver = \pcov\Driver6::class;
 			}
 
+			
 			$contents = preg_replace(
 				"~return([^;]+)~",
 				"return (function(){\n".
@@ -33,6 +38,10 @@ namespace pcov
 				"})();", file_get_contents($autoload));
 
 			file_put_contents($autoload, $contents);
+		}
+
+		public static function install(Event $ev) {
+			echo "installing\n";
 		}
 	}
 }

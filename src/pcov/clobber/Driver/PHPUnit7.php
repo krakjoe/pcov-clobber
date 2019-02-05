@@ -1,12 +1,12 @@
 <?php
-namespace pcov 
+namespace pcov\Clobber\Driver
 {
 	/**
 	 * Driver for PCOV code coverage functionality.
 	 *
 	 * @codeCoverageIgnore
 	 */
-	class Driver6
+	class PHPUnit7 implements \SebastianBergmann\CodeCoverage\Driver\Driver
 	{
 	    public function __construct($filter = null)
 	    {
@@ -16,7 +16,7 @@ namespace pcov
 	    /**
 	     * Start collection of code coverage information.
 	     */
-	    public function start(bool $determineUnusedAndDead = true)
+	    public function start(bool $determineUnusedAndDead = true) : void
 	    {
 		\pcov\start();
 	    }
@@ -24,7 +24,7 @@ namespace pcov
 	    /**
 	     * Stop collection of code coverage information.
 	     */
-	    public function stop()
+	    public function stop() : array
 	    {
 		\pcov\stop();
 
