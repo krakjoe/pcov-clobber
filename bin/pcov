@@ -98,18 +98,11 @@ try {
 	$coverage = new \pcov\Clobber\CodeCoverage(
 		(new ReflectionClass(\SebastianBergmann\CodeCoverage\CodeCoverage::class))->getFilename());
 	$coverage->{$config["operation"]}($config["version"]);
-	$coverage = true;
 } catch (Error $ex) {
 	if ($runtime === true) {
 		$runtime = new \pcov\Clobber\Runtime(
 			(new ReflectionClass(\SebastianBergmann\Environment\Runtime::class))->getFilename());
 		$runtime->unclobber($config["version"]);
-	}
-
-	if ($coverage === true) {
-		$coverage = new \pcov\Clobber\CodeCoverage(
-			(new ReflectionClass(\SebastianBergmann\CodeCoverage\CodeCoverage::class))->getFilename());
-		$coverage->unclobber($config["version"]);
 	}
 
 	throw new Error("Clobbering failed, changes reverted", 0, $ex);
