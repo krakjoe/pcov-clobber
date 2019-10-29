@@ -3,7 +3,7 @@
 
 PCOV support was merged into PHPUnit 8, and I __strongly__ encourage you to upgrade to PHPUnit 8 ... however ...
 
-Since for some people, this is turning out to be a nightmare because of the usage of void, and type system rules; Here is a package that will clobber the Xdebug driver in version 6 and 7 of PHPUnit.
+Since for some people, this is turning out to be a nightmare because of the usage of void, and type system rules; Here is a package that will clobber the Xdebug driver in version 5, 6 and 7 of PHPUnit.
 
 Usage
 =====
