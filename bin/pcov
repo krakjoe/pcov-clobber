@@ -71,16 +71,19 @@ if ($config["path"]) {
 	}
 }
 
-if (!\class_exists(\PHPUnit\Runner\Version::class)) {
-	usage("PHPUnit does not seem to be available");
+if (class_exists(PHPUnit_Runner_Version::class) &&
+    (\version_compare(PHPUnit_Runner_Version::id(), "5", ">="))) {
+    $config["version"] = 5;
+} else if (!\class_exists(\PHPUnit\Runner\Version::class)) {
+    usage("PHPUnit does not seem to be available");
 } else if (\version_compare(\PHPUnit\Runner\Version::id(), "8", ">=")) {
-	usage("PHPUnit 8 does not require a patch for PCOV");
+    usage("PHPUnit 8 does not require a patch for PCOV");
 } else if (\version_compare(\PHPUnit\Runner\Version::id(), "7", ">=")) {
-	$config["version"] = 7;
+    $config["version"] = 7;
 } else if (\version_compare(\PHPUnit\Runner\Version::id(), "6", ">=")) {
-	$config["version"] = 6;
+    $config["version"] = 6;
 } else {
-	usage("Clobber supports PHPUnit version 6 or 7");
+    usage("Clobber supports PHPUnit version 5, 6 or 7");
 }
 
 if (!class_exists(\SebastianBergmann\Environment\Runtime::class) || 
